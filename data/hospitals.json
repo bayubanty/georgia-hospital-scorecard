@@ -1,1 +1,33 @@
-
+{
+  "hospitals": [
+    {
+      "RECORD_ID": 110001,
+      "Name": "Hamilton Medical Center",
+      "State": "GA",
+      "City": "Dalton",
+      "Address": "1200 MEMORIAL DRIVE",
+      "Zip": 30720,
+      "Lat": 34.773,
+      "Lng": -84.971,
+      "TYPE_NonProfit": 1,
+      "TYPE_ForProfit": 0,
+      "TYPE_urban": 1,
+      "TYPE_rural": 0,
+      "TIER_1_GRADE_Lown_Composite": "C",
+      "BalanceGrowth": 78,
+      "Transparency": 65,
+      "FiscalHealth": 82,
+      "Staffing": 71,
+      "TaxBenefit": 89,
+      "QualityOfCBS": 76,
+      "StrategicUse": 68,
+      "FinancialBurden": 45,
+      "CharityCare": 92,
+      "MedicalDebt": 38,
+      "RangeOfServices": 85,
+      "DemographicAlignment": 72,
+      "WorkforceTraining": 88,
+      "PayEquityRatio": 63
+    }
+  ]
+}
