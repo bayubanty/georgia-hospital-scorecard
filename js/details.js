@@ -5,7 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
     backToMainLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            showMainPage();
+            if (typeof showMainPage === 'function') {
+                showMainPage();
+            }
         });
     });
 
@@ -26,73 +28,115 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Check if we're on the details page and need to load hospital data
+    const urlParams = new URLSearchParams(window.location.search);
+    const hospitalId = urlParams.get('id');
+    if (hospitalId && document.getElementById('details-page').style.display !== 'none') {
+        // If hospitalsData is already loaded, display the details
+        if (window.hospitalsData && window.hospitalsData.length > 0) {
+            const hospital = window.hospitalsData.find(h => h.RECORD_ID == hospitalId);
+            if (hospital) {
+                displayHospitalDetails(hospital);
+            }
+        } else {
+            // Wait for hospitalsData to be available
+            const checkData = setInterval(() => {
+                if (window.hospitalsData && window.hospitalsData.length > 0) {
+                    clearInterval(checkData);
+                    const hospital = window.hospitalsData.find(h => h.RECORD_ID == hospitalId);
+                    if (hospital) {
+                        displayHospitalDetails(hospital);
+                    }
+                }
+            }, 100);
+        }
+    }
 });
 
 function showMainPage() {
     const mainPage = document.getElementById('main-page');
     const detailsPage = document.getElementById('details-page');
     
-    mainPage.style.display = 'block';
-    detailsPage.style.display = 'none';
-    
-    // Update URL without page reload
-    window.history.pushState({}, '', window.location.pathname);
+    if (mainPage && detailsPage) {
+        mainPage.style.display = 'block';
+        detailsPage.style.display = 'none';
+        
+        // Update URL without page reload
+        window.history.pushState({}, '', window.location.pathname);
+    }
 }
 
 function showDetailsPage(hospitalId) {
     const mainPage = document.getElementById('main-page');
     const detailsPage = document.getElementById('details-page');
     
-    mainPage.style.display = 'none';
-    detailsPage.style.display = 'block';
-    
-    // Update URL without page reload
-    window.history.pushState({}, '', `?id=${hospitalId}`);
-    
-    // Load and display hospital details
-    const hospital = window.hospitalsData.find(h => h.RECORD_ID == hospitalId);
-    if (hospital) {
-        displayHospitalDetails(hospital);
-    } else {
-        document.getElementById('hospitalName').textContent = 'Hospital Not Found';
-        document.getElementById('hospitalGrade').textContent = '?';
-        document.getElementById('hospitalGrade').className = 'grade-circle';
+    if (mainPage && detailsPage) {
+        mainPage.style.display = 'none';
+        detailsPage.style.display = 'block';
+        
+        // Update URL without page reload
+        window.history.pushState({}, '', `?id=${hospitalId}`);
+        
+        // Load and display hospital details
+        if (window.hospitalsData) {
+            const hospital = window.hospitalsData.find(h => h.RECORD_ID == hospitalId);
+            if (hospital) {
+                displayHospitalDetails(hospital);
+            } else {
+                document.getElementById('hospitalName').textContent = 'Hospital Not Found';
+                document.getElementById('hospitalGrade').textContent = '?';
+                document.getElementById('hospitalGrade').className = 'grade-circle';
+            }
+        }
     }
 }
 
 function displayHospitalDetails(hospital) {
+    if (!hospital) return;
+    
     // Update hospital header
-    document.getElementById('hospitalName').textContent = hospital.Name;
-    document.getElementById('hospitalGrade').textContent = hospital.TIER_1_GRADE_Lown_Composite;
-    document.getElementById('hospitalGrade').className = `grade-circle grade-${hospital.TIER_1_GRADE_Lown_Composite}`;
+    const hospitalNameElement = document.getElementById('hospitalName');
+    const hospitalGradeElement = document.getElementById('hospitalGrade');
+    
+    if (hospitalNameElement) {
+        hospitalNameElement.textContent = hospital.Name;
+    }
+    if (hospitalGradeElement) {
+        hospitalGradeElement.textContent = hospital.TIER_1_GRADE_Lown_Composite;
+        hospitalGradeElement.className = `grade-circle grade-${hospital.TIER_1_GRADE_Lown_Composite}`;
+    }
     
     // Update hospital information
-    document.getElementById('hospitalInfo').innerHTML = `
-        <div class="info-item">
-            <div class="info-label">Address</div>
-            <div class="info-value">${hospital.Address}</div>
-        </div>
-        <div class="info-item">
-            <div class="info-label">City</div>
-            <div class="info-value">${hospital.City}</div>
-        </div>
-        <div class="info-item">
-            <div class="info-label">State</div>
-            <div class="info-value">${hospital.State}</div>
-        </div>
-        <div class="info-item">
-            <div class="info-label">ZIP Code</div>
-            <div class="info-value">${hospital.Zip}</div>
-        </div>
-        <div class="info-item">
-            <div class="info-label">Hospital Type</div>
-            <div class="info-value">${hospital.TYPE_NonProfit ? 'Nonprofit' : 'For Profit'}</div>
-        </div>
-        <div class="info-item">
-            <div class="info-label">Location Type</div>
-            <div class="info-value">${hospital.TYPE_urban ? 'Urban' : 'Rural'}</div>
-        </div>
-    `;
+    const hospitalInfoElement = document.getElementById('hospitalInfo');
+    if (hospitalInfoElement) {
+        hospitalInfoElement.innerHTML = `
+            <div class="info-item">
+                <div class="info-label">Address</div>
+                <div class="info-value">${hospital.Address}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">City</div>
+                <div class="info-value">${hospital.City}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">State</div>
+                <div class="info-value">${hospital.State}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">ZIP Code</div>
+                <div class="info-value">${hospital.Zip}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Hospital Type</div>
+                <div class="info-value">${hospital.TYPE_NonProfit ? 'Nonprofit' : 'For Profit'}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Location Type</div>
+                <div class="info-value">${hospital.TYPE_urban ? 'Urban' : 'Rural'}</div>
+            </div>
+        `;
+    }
     
     // Update all metric ratings
     updateMetricRating('BalanceGrowth', hospital.BalanceGrowth);
@@ -115,26 +159,14 @@ function updateMetricRating(metricName, value) {
     const starsElement = document.getElementById(`stars${metricName}`);
     const valueElement = document.getElementById(`value${metricName}`);
     
-    if (starsElement && valueElement) {
+    if (starsElement && valueElement && typeof getStarRating === 'function' && typeof generateStars === 'function') {
         const rating = getStarRating(value);
         starsElement.innerHTML = generateStars(rating);
         valueElement.textContent = `${value}%`;
     }
 }
 
-function getStarRating(percentage) {
-    const stars = Math.ceil(percentage / 20);
-    return Math.max(1, Math.min(5, stars));
-}
-
-function generateStars(rating) {
-    let starsHtml = '';
-    for (let i = 1; i <= 5; i++) {
-        if (i <= rating) {
-            starsHtml += '<span class="star filled">★</span>';
-        } else {
-            starsHtml += '<span class="star">☆</span>';
-        }
-    }
-    return starsHtml;
-}
+// Make functions globally available
+window.showDetailsPage = showDetailsPage;
+window.showMainPage = showMainPage;
+window.displayHospitalDetails = displayHospitalDetails;
