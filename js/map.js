@@ -7,8 +7,16 @@ let markerLayerGroup = L.layerGroup();
 // Make these available globally
 window.mainMap = mainMap;
 window.locationCircle = locationCircle;
+window.markerLayerGroup = markerLayerGroup;
 
 function initMainMap() {
+    // Check if map container exists
+    const mapContainer = document.getElementById('mainMap');
+    if (!mapContainer) {
+        console.log('Map container not found');
+        return;
+    }
+    
     // Create a map centered on Georgia
     mainMap = L.map('mainMap').setView([32.6782, -83.2226], 7);
     
@@ -23,17 +31,32 @@ function initMainMap() {
     // Update global reference
     window.mainMap = mainMap;
     
-    // Add markers for all hospitals
-    updateMapMarkers(window.filteredHospitals);
+    // Add markers for all hospitals if data is available
+    if (window.filteredHospitals && window.filteredHospitals.length > 0) {
+        updateMapMarkers(window.filteredHospitals);
+    } else {
+        // Wait for data to be available
+        const checkData = setInterval(() => {
+            if (window.filteredHospitals && window.filteredHospitals.length > 0) {
+                clearInterval(checkData);
+                updateMapMarkers(window.filteredHospitals);
+            }
+        }, 100);
+    }
 }
 
 function updateMapMarkers(hospitals) {
+    if (!markerLayerGroup || !mainMap) {
+        console.log('Map not initialized');
+        return;
+    }
+    
     // Clear existing markers
     markerLayerGroup.clearLayers();
     markers = [];
     
     // Add new markers for each hospital
-    hospitals.forEach(hospital => {
+    hospitals.forEach((hospital) => {
         // Determine marker color based on grade
         let markerColor;
         switch(hospital.TIER_1_GRADE_Lown_Composite) {
@@ -61,7 +84,7 @@ function updateMapMarkers(hospitals) {
                 ${hospital.Address}, ${hospital.City}<br>
                 Grade: ${hospital.TIER_1_GRADE_Lown_Composite}
                 <br><br>
-                <button onclick="showDetailsPage(${hospital.RECORD_ID})" style="background: #f48810; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">View Details</button>
+                <button onclick="window.showDetailsPage(${hospital.RECORD_ID})" style="background: #f48810; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">View Details</button>
             `);
         
         markers.push(marker);
@@ -74,12 +97,6 @@ function updateMapMarkers(hospitals) {
     }
 }
 
-// Initialize map when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for the main.js to load hospital data
-    setTimeout(() => {
-        if (document.getElementById('mainMap')) {
-            initMainMap();
-        }
-    }, 100);
-});
+// Make functions globally available
+window.initMainMap = initMainMap;
+window.updateMapMarkers = updateMapMarkers;
